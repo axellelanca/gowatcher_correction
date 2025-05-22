@@ -3,6 +3,8 @@ package main
 
 import (
 	"fmt"
+	"sync"
+
 	// package local checker : qu’on a défini dans internal/checker/check.go, et qui contient notre logique de vérification.
 	"github.com/axellelanca/gowatcher_correction/internal/checker"
 )
@@ -37,30 +39,21 @@ func main() {
 		"https://www.movie.review/genre/comedy",
 		"https://www.gaming.forum/topic/strategy",
 	}
+	var wg sync.WaitGroup
 
-	// Channel pour récupérer les résultats
-	results := make(chan checker.CheckResult)
-
-	// Lancer les vérifications parallèles
-	// Pour chaque URL on lance une goroutine avec go (fonction asynchrone)
-	// Chaque appel à checkURL fera la requête HTTP et enverra un checkResult dans le channel
-	// Cette ligne montre la concurrence simple avec Go : un appel go func() = nouveau thread léger.
-
+	wg.Add(len(targets))
 	for _, url := range targets {
-		go checker.CheckURL(url, results)
+		go func(u string) {
+			defer wg.Done()
+			result := checker.CheckURLSync(u)
+			if result.Err != nil {
+				fmt.Printf("❌ %s : erreur - %v\n", result.Target, result.Err)
+			} else {
+				fmt.Printf("✅ %s : OK - %s\n", result.Target, result.Status)
+			}
+		}(url)
 	}
 
-	// On récupère un résultat du channel pour chaque cible (même nombre que plus haut).
-	// - result := <-results bloque tant qu’un résultat n’est pas reçu.
-	// - On itère autant de fois qu’il y a d’URLs (donc on s’assure de consommer tous les messages)
-	for range targets {
-		result := <-results
+	wg.Wait()
 
-		// On vérifie la présente d'erreur
-		if result.Err != nil {
-			fmt.Printf("KO %s : erreur - %v\n", result.Target, result.Err)
-		} else {
-			fmt.Printf("%s : OK - %s\n", result.Target, result.Status)
-		}
-	}
 }

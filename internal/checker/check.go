@@ -13,24 +13,15 @@ type CheckResult struct {
 	Err    error
 }
 
-func CheckURL(url string, results chan<- CheckResult) {
+func CheckURLSync(url string) CheckResult {
 	// Timeout court pour éviter de bloquer trop longtemps
-	client := http.Client{
-		Timeout: 3 * time.Second,
-	}
+	client := http.Client{Timeout: 3 * time.Second}
 
 	resp, err := client.Get(url)
 	if err != nil {
-		results <- CheckResult{
-			Target: url,
-			Err:    fmt.Errorf("Request failed:  %w", err),
-		}
-		return
+		return CheckResult{Target: url, Err: fmt.Errorf("failed to fetch URL : %w", err)}
 	}
 	defer resp.Body.Close()
 
-	results <- CheckResult{
-		Target: url,
-		Status: resp.Status,
-	}
+	return CheckResult{Target: url, Status: resp.Status}
 }
