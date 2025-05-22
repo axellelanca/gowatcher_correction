@@ -1,7 +1,6 @@
 package checker
 
 import (
-	"fmt"
 	"net/http"
 	"time"
 )
@@ -19,7 +18,10 @@ func CheckURLSync(url string) CheckResult {
 
 	resp, err := client.Get(url)
 	if err != nil {
-		return CheckResult{Target: url, Err: fmt.Errorf("failed to fetch URL : %w", err)}
+		return CheckResult{
+			Target: url,
+			Err:    &UnreachableURLError{URL: url, Err: err},
+		}
 	}
 	defer resp.Body.Close()
 
