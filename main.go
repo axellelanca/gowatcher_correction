@@ -3,8 +3,6 @@ package main
 
 import (
 	"fmt"
-	"sync"
-
 	// package local checker : qu’on a défini dans internal/checker/check.go, et qui contient notre logique de vérification.
 	"github.com/axellelanca/gowatcher_correction/internal/checker"
 )
@@ -39,8 +37,6 @@ func main() {
 		"https://www.movie.review/genre/comedy",
 		"https://www.gaming.forum/topic/strategy",
 	}
-
-	var wg sync.WaitGroup
 
 	// Channel pour récupérer les résultats
 	results := make(chan checker.CheckResult)
